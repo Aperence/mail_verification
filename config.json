@@ -1,0 +1,12 @@
+{
+    "imap_conf" : {
+        "user" : "emailAddress@hotmail.com",
+        "password" : "Password",
+        "host" : "outlook.office365.com",
+        "port": 993,
+        "tls": true
+    },
+    "authorized_domains" : ["uclouvain.be", "student.uclouvain.be"],
+    "salt" : "$2b$10$Y5Wh9qRCkYAKFsxwkNWOpO",
+    "db_url" : "mongodb://127.0.0.1:27017"
+}
