@@ -70,8 +70,6 @@ function getEmails(){
       });
   
       imap.once('end', () => {
-        // all mail read, write it to file
-        write_file()
         console.log('Connection ended');
       });
   
