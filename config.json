@@ -8,5 +8,6 @@
     },
     "authorized_domains" : ["uclouvain.be", "student.uclouvain.be"],
     "salt" : "$2b$10$Y5Wh9qRCkYAKFsxwkNWOpO",
-    "db_url" : "mongodb://127.0.0.1:27017"
+    "db_url" : "mongodb://127.0.0.1:27017",
+    "delayMilli" : 15000
 }

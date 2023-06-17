@@ -1,14 +1,46 @@
 const Imap = require('imap');
 const {simpleParser} = require('mailparser');
+const db = require("./db")
 
 const config = require("./config.json")
 const imapConfig = config.imap_conf
 
-const db = require("./db")
+
 
 const authorized_domains = config.authorized_domains
 
-function getEmails(){
+/**
+ * Handle the register and add an user to the db if this user isn't previously already banned
+ * 
+ * @param from : the sender of the mail
+ * @param subject : subject of the email
+ * @param textAsHtml : text as html of the email
+ * @param text : the text of the email
+ */
+function handle_register(from, subject, textAsHtml, text){
+  let address = from.value[0].address;
+  address  = address.split("@")
+  let domain = address[1]
+  let name = address[0]
+  let pseudo = subject
+
+
+  if (authorized_domains.indexOf(domain) != -1){
+    db.check_banned(db.hash_mail(name)).then((res)=>{
+        if (res){
+            console.log(`User ${name} is banned and trying to recreate an account...`)
+            return
+        }else{
+            db.add_user(name, pseudo).then(() => {
+              // added user to the verified accounts
+              console.log(`Successfully added user ${pseudo} to the server`)
+            })
+        }
+    })
+  }
+}
+
+function getEmails(callback){
     console.log("Running check on emails...")
     try {
       const imap = new Imap(imapConfig);
@@ -27,26 +59,7 @@ function getEmails(){
             
                   const {from, subject, textAsHtml, text} = parsed;
                   
-                  let address = from.value[0].address;
-                  address  = address.split("@")
-                  let domain = address[1]
-                  let name = address[0]
-                  let pseudo = subject
-
-
-                  if (authorized_domains.indexOf(domain) != -1){
-                    db.check_banned(db.hash_mail(name)).then((res)=>{
-                        if (res){
-                            console.log(`User ${name} is banned and trying to recreate an account...`)
-                            return
-                        }else{
-                            db.add_user(name, pseudo).then(() => {
-                              // added user to the verified accounts
-                              console.log(`Successfully added user ${pseudo} to the server`)
-                            })
-                        }
-                    })
-                  }
+                  callback(from, subject, textAsHtml, text)
                 });
 
                 msg.once('attributes', attrs => {
@@ -70,8 +83,6 @@ function getEmails(){
       });
   
       imap.once('end', () => {
-        // all mail read, write it to file
-        write_file()
         console.log('Connection ended');
       });
   
@@ -82,7 +93,22 @@ function getEmails(){
   };
   
   
+
+/*
+//Example on how to use:
+
+
 db.connect().then(() =>{
-  getEmails()
-  setInterval(() => getEmails(), 15000) // call every 15s
+
+  getEmails(handle_register)
+  setInterval(() => getEmails(handle_register),
+     config.delayMilli) // call every dalayMilli ms
 })
+*/
+
+
+module.exports = {
+  "getEmails" : getEmails,
+  "handle_register" : handle_register
+}
+
