@@ -6,12 +6,17 @@ const url = config.db_url
 const client = new MongoClient(url, { monitorCommands: true });
 
 
+interface User{
+    mail : string
+    pseudo : string
+}
+
 /**
  * Hash a mail
  * @param {string} mail : the mail to hash
  * @returns the hashed mail as a string
  */
-function hash_mail(mail){
+function hash_mail(mail : string) : string {
     return bcrypt.hashSync(mail, config.salt)
 }
 
@@ -32,21 +37,21 @@ function close(){
  * @param {string} hashed_mail : the mail to check if it is already banned
  * @returns true if the mail is banned, false otherwise
  */
-async function check_banned(hashed_mail){
+async function check_banned(hashed_mail : string) : Promise<boolean>{
 
     const db = client.db('sinf_server');
     const collection = db.collection('banned');
 
     const user = await collection.findOne({"mail" : hashed_mail})
 
-    return user  != null
+    return user != null
 }
 
 /**
  * Add an hashed email to the banned database
  * @param {string} hashed_mail : the mail to add as banned
  */
-async function add_ban(hashed_mail){
+async function add_ban(hashed_mail : string){
 
     const db = client.db('sinf_server');
     const collection = db.collection('banned');
@@ -59,7 +64,7 @@ async function add_ban(hashed_mail){
  * @param {string} mail 
  * @param {string} pseudo 
  */
-async function add_user(mail, pseudo){
+async function add_user(mail : string, pseudo : string){
     const db = client.db('sinf_server');
     const collection = db.collection('users');
 
@@ -75,14 +80,14 @@ async function add_user(mail, pseudo){
  * @param {string} hashed_mail : the mail of users
  * @returns a list of users deleted, with format [{"pseudo" : pseudo, "mail" : hashed_mail}]
  */
-async function remove_user(hashed_mail){
+async function remove_user(hashed_mail : string) : Promise<Array<User>>{
 
     const db = client.db('sinf_server');
     const collection = db.collection('users');
 
     const users = await collection.find({"mail" : hashed_mail}).toArray()
 
-    await collection.deleteMany({"mail" : mail})
+    await collection.deleteMany({"mail" : hashed_mail})
 
     return users
 }
@@ -92,7 +97,7 @@ async function remove_user(hashed_mail){
  * @param {string} pseudo : the pseudo used by the user
  * @returns the info for the user, with following format {"pseudo" : pseudo, "mail" : hashed_mail}
  */
-async function get_user(pseudo){
+async function get_user(pseudo : string) : Promise<User>{
     const db = client.db('sinf_server');
     const collection = db.collection('users');
 

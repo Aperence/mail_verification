@@ -7,3 +7,5 @@ bcrypt
   .then(salt => {
     console.log('Salt: ', salt)
   })
+
+export {};

@@ -2,21 +2,26 @@ const Imap = require('imap');
 const {simpleParser} = require('mailparser');
 const db = require("./db")
 
-const config = require("./config.json")
-const imapConfig = config.imap_conf
+const conf = require("./conf.json")
+const imapconf = conf.imap_conf
 
 
 
-const authorized_domains = config.authorized_domains
+const authorized_domains = conf.authorized_domains
 
 class Verification{
-  constructor(onVerifiedCallback, onBannedCallback) {
+
+  onVerifiedCallback : (pseudo : string) => void
+  onBannedCallback : (pseudo : string) => void
+  handle : NodeJS.Timeout
+
+  constructor(onVerifiedCallback : (pseudo : string) => void, onBannedCallback : (pseudo : string) => void) {
     this.onVerifiedCallback = onVerifiedCallback
     this.onBannedCallback = onBannedCallback
     db.connect().then(() =>{
 
       this.handle = setInterval(() => this.getEmails(),
-              config.delayMilli) // call every delayMilli ms
+              conf.delayMilli) // call every delayMilli ms
     })
   }
 
@@ -28,7 +33,7 @@ class Verification{
    * @param textAsHtml : text as html of the email
    * @param text : the text of the email
    */
-  handle_register(from, subject, textAsHtml, text, onVerifiedCallback){
+  handle_register(from, subject : string, textAsHtml : string, text : string){
     let address = from.value[0].address;
     address  = address.split("@")
     let domain = address[1]
@@ -55,7 +60,7 @@ class Verification{
   getEmails(){
     console.log("Running check on emails...")
     try {
-      const imap = new Imap(imapConfig);
+      const imap = new Imap(imapconf);
       imap.once('ready', () => {
         imap.openBox('INBOX', false, () => {
           imap.search(['UNSEEN'], (err, results) => {
@@ -104,9 +109,9 @@ class Verification{
     }
   };
 
-  ban(pseudo){
+  ban(pseudo : string){
     db.get_user(pseudo).then(user =>{
-      hashed_mail = user.mail
+      let hashed_mail = user.mail
       db.add_ban(hashed_mail)
 
       for (let user of db.remove_user(hashed_mail)){
