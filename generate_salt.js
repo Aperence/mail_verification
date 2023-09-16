@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt")
 
-saltRounds = 10
+let saltRounds = 10
 
 bcrypt
   .genSalt(saltRounds)
